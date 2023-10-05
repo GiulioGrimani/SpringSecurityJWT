@@ -90,9 +90,21 @@ public class SecurityConfig {
 		 * consente a tutti, anche a client non autenticati, di usare i servizi
 		 * associati agli endpoint
 		 * 
-		 * {qualcosa da capire meglio} successivamente e' possibile definire in base al
-		 * ruolo e/o autorizzazione dove l'utente puo' accedere (ruolo per gli endpoint)
-		 * e cosa puo' fare (autorizzazione per le dml)
+		 * possiamo definire inoltre dei roles e delle authorities per raffinare
+		 * l'accesso agli endpoint. Nella classe UserInfo abbiamo definito un attributo
+		 * chiamato "roles" che definisce una lista di roles e authorities. Un ruolo e'
+		 * normalmente descritto dalla stringa "ROLE_nomeRuolo", ovvero contiene il
+		 * prefisso "ROLE_". Un'authority non ha tale prefisso, sara' quindi descritta
+		 * dalla stringa "nomeRuolo". Nel filtro, usiamo ad esempio:
+		 * .....................auth.requestMatchers("/api/v1/isRunning").hasRole("CTO")
+		 * oppure
+		 * ................auth.requestMatchers("/api/v1/isRunning").hasAuthority("CTO")
+		 * e la differenza e' che l'hasRole abilita l'uso dell'endpoint solo agli utenti
+		 * che hanno "ROLE_CTO" nell'attributo "roles", mentre l'hasAuthority solo
+		 * quelli che nell'attributo hanno "CTO". Ovviamente una gestione ottimale di
+		 * roles e authorities passa attraverso la definizione di un'entity "Role" che
+		 * stara' in relazione n:n con l'entity "UserInfo"
+		 * 
 		 * 
 		 * auth.anyRequest().authenticated(); significa che tutti gli altri endpoint
 		 * sono usabili solo da client autenticati
@@ -145,8 +157,8 @@ public class SecurityConfig {
 
 		return http.authorizeHttpRequests(auth -> {
 			auth.requestMatchers("/api/v1/addUser", "/api/v1/getToken").permitAll();
-//			auth.requestMatchers("/api/v1/whereAmI").hasAuthority("DIO");
-//			auth.requestMatchers("/api/v1/isRunning").hasAuthority("CEO");
+			auth.requestMatchers("/api/v1/whereAmI").hasAuthority("DIO");
+			auth.requestMatchers("/api/v1/isRunning").hasRole("CEO");
 			auth.anyRequest().authenticated();
 		}).csrf(csrf -> csrf.disable()).cors(withDefaults())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
